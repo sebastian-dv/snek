@@ -1,2 +1,0 @@
-cargo:rustc-link-search=src/runtime
-cargo:rustc-link-lib=our_code

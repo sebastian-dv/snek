@@ -6,7 +6,8 @@ class I took. I got the chance to learn a little more about compilers
 and get some hands on experience with writing one.
 
 A snek program will always evaluate to an integer, boolean, or
-end with an error. 
+end with an error. Supports ahead-of-time, just-in-time, and REPL 
+execution modes with optional static typechecking.
 
 ## Pipeline
 

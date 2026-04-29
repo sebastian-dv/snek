@@ -1,0 +1,2 @@
+(fun (add) (add1 6))
+(add)

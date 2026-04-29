@@ -1,0 +1,160 @@
+commit e74a6e5741f0754399120fc3949168a43e9edc3d
+Author: Diaz <s6diaz@ieng6-202.ucsd.edu>
+Date:   Mon Nov 17 22:57:02 2025 -0800
+
+    created collect args function to reduce code repetition inside of main
+
+diff --git a/src/main.rs b/src/main.rs
+index c0472fa..277b2f6 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -288,83 +288,95 @@ fn typecheck_only(in_name: &str) -> std::io::Result<()> {
+     Ok(())
+ }
+ 
+-fn main() -> std::io::Result<()> {
+-    let args: Vec<String> = env::args().collect();
+-
+-    let valid_flags = vec!["-c", "-e", "-g", "-i", "-tc", "-te", "-tg", "-ti", "-t"];
+-    let flag = match args.get(1) {
+-        Some(f) => f,
+-        None => {
+-            eprintln!("Specify flag:\n-c (in) (out)\n-e (in) (optional_input)\n-g (in) (out) (optional_input)\n-i");
+-            return Ok(());
+-        }
+-    };
+-    if !valid_flags.contains(&flag.as_str()) {
+-        eprintln!("Specify flag:\n-c (in) (out)\n-e (in) (optional_input)\n-g (in) (out) (optional_input)\n-i");
+-        return Ok(());
+-    }
+-
+-    let ops = dynasmrt::x64::Assembler::new().unwrap();
++fn invalid_arg() -> ! {
++    eprintln!("Error: missing required argument input name");
++    eprintln!("-c/-tc (in) (out)\n-e/-te (in) (optional_input)\n-g/-tg (in) (out) (optional_input)\n-i/-ti\n-t (in)");
++    std::process::exit(1);
++}
+ 
++fn collect_args(args: &Vec<String>, flag: &String) -> (String, Option<String>, Option<String>) {
+     if flag == "-c" || flag == "-tc" {
+         let in_name = match args.get(2) {
+-            Some(name) => name,
+-            None => {
+-                eprintln!("Error: missing required argument input name");
+-                eprintln!("-c (in) (out)\n-e (in) (optional_input)\n-g (in) (out) (optional_input)\n-i");
+-                return Ok(())
+-            }
++            Some(name) => name.clone(),
++            None => invalid_arg(),
+         };
+         let out_name = match args.get(3) {
+-            Some(name) => name,
+-            None => {
+-                eprintln!("Error: missing required argument output name");
+-                eprintln!("-c (in) (out)\n-e (in) (optional_input)\n-g (in) (out) (optional_input)\n-i");
+-                return Ok(())
+-            }
++            Some(name) => name.clone(),
++            None => invalid_arg(),
+         };
+-        compile_aot(&in_name, &out_name, flag =="-tc")?;
++
++        (in_name, Some(out_name), None)
++
+     } else if flag == "-e" || flag == "-te"{
+         let in_name = match args.get(2) {
+             Some(name) => name.clone(),
+-            None => {
+-                eprintln!("Error: missing required argument input name");
+-                eprintln!("-c (in) (out)\n-e (in) (optional_input)\n-g (in) (out) (optional_input)\n-i");
+-                return Ok(())
+-            }
++            None => invalid_arg(),
+         };
+         let optional_arg = args.get(3);
+-        compile_jit(ops, &in_name, optional_arg, flag == "-te")?;
++
++        (in_name, None, optional_arg.cloned())
++
+     } else if flag == "-g" || flag =="-tg"{
+         let in_name = match args.get(2) {
+             Some(name) => name.clone(),
+-            None => {
+-                eprintln!("Error: missing required argument input name");
+-                eprintln!("-c (in) (out)\n-e (in) (optional_input)\n-g (in) (out) (optional_input)\n-i");
+-                return Ok(())
+-            }
++            None => invalid_arg(),
+         };
+         let out_name = match args.get(3) {
+             Some(name) => name.clone(),
+-            None => {
+-                eprintln!("Error: missing required argument output name");
+-                eprintln!("-c (in) (out)\n-e (in) (optional_input)\n-g (in) (out) (optional_input)\n-i");
+-                return Ok(())
+-            }
++            None => invalid_arg(),
+         };
+         let optional_arg = args.get(4);
+-        compile_aot(&in_name, &out_name, flag == "-tg")?;
+-        compile_jit(ops, &in_name, optional_arg, flag == "-tg")?;
+-    } else if flag == "-i" || flag == "-ti"{
+-        compile_repl(ops, flag == "-ti")?;
++
++        (in_name, Some(out_name), optional_arg.cloned())
++
+     } else if flag == "-t" {
+         let in_name = match args.get(2) {
+             Some(name) => name.clone(),
+-            None => {
+-                eprintln!("Error: missing required argument input name");
+-                return Ok(())
+-            }
++            None => invalid_arg(),
+         };
++
++        (in_name, None, None)
++    } else {
++        (String::new(), None, None)
++    }
++}
++
++fn main() -> std::io::Result<()> {
++    let args: Vec<String> = env::args().collect();
++
++    let valid_flags = vec!["-c", "-e", "-g", "-i", "-tc", "-te", "-tg", "-ti", "-t"];
++    let flag = match args.get(1) {
++        Some(f) => f,
++        None => {
++            eprintln!("Specify flag:\n-c (in) (out)\n-e (in) (optional_input)\n-g (in) (out) (optional_input)\n-i");
++            return Ok(());
++        }
++    };
++    if !valid_flags.contains(&flag.as_str()) {
++        eprintln!("Specify flag:\n-c (in) (out)\n-e (in) (optional_input)\n-g (in) (out) (optional_input)\n-i");
++        return Ok(());
++    }
++
++    let ops = dynasmrt::x64::Assembler::new().unwrap();
++
++    if flag == "-c" || flag == "-tc" {
++        let (in_name, out_name, _) = collect_args(&args, flag);
++        compile_aot(&in_name, &out_name.unwrap(), flag =="-tc")?;
++
++    } else if flag == "-e" || flag == "-te" {
++        let (in_name, _, optional_arg) = collect_args(&args, flag);
++        compile_jit(ops, &in_name, optional_arg.as_ref(), flag == "-te")?;
++
++    } else if flag == "-g" || flag =="-tg" {
++        let (in_name, out_name, optional_arg) = collect_args(&args, flag);
++        compile_aot(&in_name, &out_name.unwrap(), flag == "-tg")?;
++        compile_jit(ops, &in_name, optional_arg.as_ref(), flag == "-tg")?;
++
++    } else if flag == "-i" || flag == "-ti" {
++        compile_repl(ops, flag == "-ti")?;
++
++    } else if flag == "-t" {
++        let (in_name, _, _) = collect_args(&args, flag);
+         typecheck_only(&in_name)?;
+     }
+ 

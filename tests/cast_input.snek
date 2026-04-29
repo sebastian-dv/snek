@@ -1,0 +1,2 @@
+(let ((x (cast Num input)))
+  (+ x 10))

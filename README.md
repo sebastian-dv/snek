@@ -22,7 +22,7 @@ execution modes with optional static typechecking.
 ## Compile
 
 ```
-# Enable static typechecking by adding the t option (ex: -tc)
+# Enable static typechecking with t flag (ex: -tc)
 # AOT (Ahead-of-time)
 cargo run -- -c tests/test1.snek tests/test1.s
 # JIT (Just-in-time) 

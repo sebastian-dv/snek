@@ -14,7 +14,7 @@ execution modes with optional static typechecking.
 1. Parse snek program with Rust's sexp s-expression parser
 2. Keep track of function and variable definitions
 3. Convert to custom Expr data structure
-4. Compile Expr to Instruction data structure
+4. Lower AST to an intermediate Instruction representation
 5. Convert Instruction to x86-64 assembly
     - String format for AOT compile
     - Dynasm for JIT or REPL compile

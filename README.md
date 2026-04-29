@@ -21,6 +21,7 @@ end with an error.
 ## Compile
 
 ```
+# Add -t to any for typechecking
 # AOT (Ahead-of-time)
 cargo run -- -c tests/test1.snek tests/test1.s
 # JIT (Just-in-time) 
@@ -58,6 +59,50 @@ cargo run -- -i
 <binding> := (<identifier> <expr>)
 ```
 
+## Example Programs
+
+```
+(fun (fact n)
+  (let
+    ((i 1) (acc 1))
+    (loop
+      (if (> i n)
+        (break acc)
+        (block
+          (set! acc (* acc i))
+          (set! i (+ i 1))
+        )
+      )
+    )
+  )
+)
+(fact input)
+```
+
+```
+(fun (isodd n)
+  (if (< n 0)
+      (isodd (- 0 n))
+      (if (= n 0)
+          false
+          (iseven (sub1 n))
+      )
+  )
+)
+
+(fun (iseven n)
+  (if (= n 0)
+      true
+      (isodd (sub1 n))
+  )
+)
+
+(block
+  (print input)
+  (print (iseven input))
+)
+
+```
 
 ## To add new tests
 

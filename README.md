@@ -21,9 +21,9 @@ end with an error.
 ## Compile
 
 ```
-# Ahead-of-time (AOT)
+# AOT (Ahead-of-time)
 cargo run -- -c tests/test1.snek tests/test1.s
-# JIT Just-in-time 
+# JIT (Just-in-time) 
 cargo run -- -e tests/test1.snek <optionalArg>
 # AOT and JIT
 cargo run -- -g tests/test1.snek tests/test1.s <optionalArg>
